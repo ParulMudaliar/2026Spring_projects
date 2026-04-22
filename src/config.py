@@ -3,40 +3,36 @@ config.py
 Central configuration for ATM Cash Replenishment Monte Carlo Simulation.
 All parameters live here. No hardcoded values anywhere else.
 
-AI Disclosure: Claude (Anthropic) assisted in drafting this codebase.
-All modeling decisions reviewed by the team.
-
 Authors: Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
+Course: IS 597PR, UIUC Spring 2026
 """
 
 CONFIG: dict = {
 
-    # --- Cash parameters ---
+    # Cash parameters
     "initial_cash": 1_200_000,
     "refill_amount": 1_200_000,
 
-    # --- Fixed schedule policy (Phase 2 control + H1 + H3) ---
+    # Fixed schedule policy
     "fixed_refill_days": 3,
 
-    # --- Demand-triggered policy (H2) ---
+    # Demand-triggered policy (H2)
     "demand_threshold": 500_000,
 
-    # --- Weibull truck delay ---
-    # Right-skewed: most trucks arrive within 1 day, occasional delays
-    # Based on logistics literature (Geismar et al. 2017)
+    # Weibull truck delay
     "weibull_shape": 1.5,
     "weibull_scale": 0.5,
 
-    # --- Simulation settings ---
+    # Simulation settings
     "sim_days": 365,
     "num_runs": 10_000,
 
-    # --- Phase 2 benchmark ---
+    # Phase 2 benchmark
     # Plausible real-world ATM stockout range from literature
     "benchmark_min": 0.05,
     "benchmark_max": 0.20,
 
-    # --- Distribution parameters ---
+    # Distribution parameters
     # Set to None until fit_distributions.py is run on the Danish dataset.
     # After running, paste printed values here to replace None.
 "lognormal_mu": 4.952723380906168,
@@ -45,7 +41,7 @@ CONFIG: dict = {
 "poisson_lambda_weekend": [12.365, 9.04, 6.7414, 6.8818, 3.6364, 5.1639, 12.5, 32.7415, 71.2267, 129.0667, 172.5333, 182.0, 163.1074, 140.1611, 123.9933, 106.9524, 96.8725, 89.6733, 72.6242, 59.4797, 43.5274, 28.3958, 17.7465, 11.781],
 "dow_multipliers": [1.0, 1.1101, 1.1612, 1.2128, 1.5156, 1.1772, 0.7906],
 
-    # --- Fallback parameters ---
+    # Fallback parameters
     # Used automatically if distribution parameters above are None.
     # These are reasonable estimates based on Fed Reserve data and
     # logistics literature. Replace with fitted values after running
