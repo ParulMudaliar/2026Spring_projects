@@ -15,10 +15,9 @@ def simulate_one_year(config: dict, policy: str = "fixed", rng: np.random.Genera
     if rng is None:
         rng = np.random.default_rng()
 
-    # Pull parameters
     mu = get_param(config, "lognormal_mu")
     sigma = get_param(config, "lognormal_sigma")
-    weekday_lambda = np.array(get_param(config, "poisson_lambda_weekday"), dtype=float)
+    weekday_lambda = np.array(get_param(config, "poisson_lambda_weekday"),dtype=float)
     weekend_lambda = np.array(get_param(config, "poisson_lambda_weekend"), dtype=float)
     dow_multipliers = np.array(get_param(config, "dow_multipliers"), dtype=float)
 
@@ -27,12 +26,18 @@ def simulate_one_year(config: dict, policy: str = "fixed", rng: np.random.Genera
 
     # Tracking
     stockout_days = 0
+    stockout_by_dow = [0] * 7
+    stockout_by_hour = [0] * 24
+    cash_history = []
 
     for day in range(sim_days):
         dow = day % 7
         is_weekend = dow >= 5
         hourly_lambda = weekend_lambda if is_weekend else weekday_lambda
         multiplier = dow_multipliers[dow]
+
+        day_had_stockout = False
+        stockout_hour = None
 
         for hour in range(24):
             lam = float(hourly_lambda[hour] * multiplier)
@@ -49,9 +54,24 @@ def simulate_one_year(config: dict, policy: str = "fixed", rng: np.random.Genera
                 if cash >= w:
                     cash -= w
                 else:
-                    stockout_days += 1
+                    day_had_stockout = True
+                    stockout_hour = hour
                     break
+
+            if day_had_stockout:
+                break
+
+        if day_had_stockout:
+            stockout_days += 1
+            stockout_by_dow[dow] += 1
+            if stockout_hour is not None:
+                stockout_by_hour[stockout_hour] += 1
+
+        cash_history.append(round(cash, 2))
 
     return {
         "stockout_days": stockout_days,
+        "stockout_by_dow": stockout_by_dow,
+        "stockout_by_hour": stockout_by_hour,
+        "cash_history": cash_history,
     }
