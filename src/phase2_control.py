@@ -53,7 +53,28 @@ def run_control(config: dict = CONFIG) -> dict:
     }
 
 
-def _print_results(mean_rate, std_rate, min_rate, max_rate, mean_dispatches, verdict):
+def _print_results(mean_rate, std_rate, min_rate, max_rate, mean_dispatches, verdict) -> None:
+    """Print the Phase 2 summary to the terminal.
+
+        Parameters
+        ----------
+        mean_rate : float
+            Mean stockout rate across all runs.
+        std_rate : float
+            Standard deviation of stockout rates.
+        min_rate : float
+            Minimum stockout rate observed.
+        max_rate : float
+            Maximum stockout rate observed.
+        mean_dispatches : float
+            Mean number of truck dispatches per year.
+        verdict : str
+            Pass or warning message.
+
+        Examples
+        --------
+        >>> _print_results(0.10, 0.02, 0.05, 0.18, 122.0, 'PASS')
+        """
     print(f"\n  Mean stockout rate:   {mean_rate:.2%}")
     print(f"  Std stockout rate:    {std_rate:.4f}")
     print(f"  Range:                {min_rate:.2%} — {max_rate:.2%}")
