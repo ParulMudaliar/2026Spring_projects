@@ -1,3 +1,14 @@
+"""
+phase2_control.py
+Phase 2 — Control run validation.
+
+Run the simulation under the fixed 3-day schedule to confirm the model
+produces a plausible stockout rate before we start experimenting.
+
+Authors: Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
+AI Disclosure: Claude  assisted in drafting this code.
+"""
+
 def run_control(config: dict = CONFIG) -> dict:
     def run_control(config: dict = CONFIG) -> dict:
         """Validate the control simulation against a real-world benchmark.
