@@ -1,4 +1,41 @@
 def run_control(config: dict = CONFIG) -> dict:
+    def run_control(config: dict = CONFIG) -> dict:
+        """Validate the control simulation against a real-world benchmark.
+
+        Runs the fixed 3-day replenishment policy num_runs times and checks
+        whether the mean stockout rate lands in the expected range. If it
+        doesn't, the distribution parameters need another look before we move
+        on to Phase 3.
+
+        Parameters
+        ----------
+        config : dict
+            Simulation config from config.py.
+
+        Returns
+        -------
+        dict with keys:
+            mean_stockout_rate  : float
+            std_stockout_rate   : float
+            min_stockout_rate   : float
+            max_stockout_rate   : float
+            mean_dispatch_count : float
+            benchmark_pass      : bool
+            verdict             : str
+            all_rates           : list[float]
+
+        Examples
+        --------
+        >>> from src.config import CONFIG
+        >>> result = run_control(CONFIG)
+        >>> 0.0 <= result['mean_stockout_rate'] <= 1.0
+        True
+        >>> isinstance(result['benchmark_pass'], bool)
+        True
+        >>> isinstance(result['verdict'], str)
+        True
+        """
+
     print("\n" + "=" * 55)
     print("PHASE 2 — Control run (fixed 3-day schedule)")
     print("=" * 55)
