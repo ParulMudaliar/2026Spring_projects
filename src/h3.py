@@ -75,8 +75,30 @@ def run_h3(config: dict = CONFIG) -> dict:
         "finding": finding,
     }
 
-
 def _zero_stockout_result(peak_hours: list[int]) -> dict:
+    """Fallback for when no stockouts occurred across all runs.
+
+    Shouldn't happen under normal parameters, but better to return
+    a clean dict than crash downstream.
+
+    Parameters
+    ----------
+    peak_hours : list[int]
+        Identified peak hours from lambda fitting.
+
+    Returns
+    -------
+    dict
+        Result dict with zero values and unsupported finding.
+
+    Examples
+    --------
+    >>> result = _zero_stockout_result([10, 11, 12])
+    >>> result['total_stockouts'] == 0
+    True
+    >>> result['supported'] == False
+    True
+    """
     return {
         "peak_hours": peak_hours,
         "peak_stockout_fraction": 0.0,
@@ -98,6 +120,28 @@ def _print_results(
     ratio: float,
     finding: str,
 ) -> None:
+    """Print the H3 breakdown to the terminal.
+
+    Parameters
+    ----------
+    total_by_hour : list[int]
+        Total stockout count per hour of day.
+    pct_by_hour : list[float]
+        Percentage of total stockouts per hour.
+    peak_hours : list[int]
+        The 8 identified peak hours.
+    peak_fraction : float
+        Fraction of stockouts in peak hours.
+    ratio : float
+        Disproportionality ratio vs uniform expectation.
+    finding : str
+        Plain-English result statement.
+
+    Examples
+    --------
+    >>> _print_results([0]*24, [0.0]*24, [10,11,12,13,14,15,16,17],
+    ...                0.5, 1.5, 'H3 SUPPORTED.')
+    """
     print(f"\n  Stockouts by hour of day:")
     for h in range(24):
         bar = "█" * int(pct_by_hour[h] / 2)
