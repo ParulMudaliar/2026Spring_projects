@@ -12,6 +12,50 @@ from src.config import CONFIG, get_param
 
 
 def simulate_one_year(config: dict, policy: str = "fixed", rng: np.random.Generator | None = None,) -> dict:
+    """Simulate one ATM for 365 days under a replenishment policy.
+
+    Each day:
+      1. Check if pending truck arrives
+      2. For each hour: draw Poisson arrivals, draw Lognormal
+         withdrawals, deplete cash, record stockouts
+      3. Decide whether to dispatch a truck
+
+    Parameters
+    ----------
+    config : dict
+        Configuration from config.py. Uses fitted params if available,
+        otherwise uses fallback params automatically.
+    policy : str
+        'fixed'  — refill every fixed_refill_days regardless of cash.
+        'demand' — refill when cash drops below demand_threshold.
+    rng : np.random.Generator, optional
+        Seeded generator for reproducibility. Created fresh if None.
+
+    Returns
+    -------
+    dict with keys:
+        stockout_days    : int
+        stockout_rate    : float
+        stockout_by_dow  : list[int]  — 7 values, Mon=0 to Sun=6
+        stockout_by_hour : list[int]  — 24 values, hour 0 to 23
+        dispatch_count   : int
+        cash_history     : list[float]
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from src.config import CONFIG
+    >>> rng = np.random.default_rng(42)
+    >>> result = simulate_one_year(CONFIG, policy='fixed', rng=rng)
+    >>> 0.0 <= result['stockout_rate'] <= 1.0
+    True
+    >>> len(result['stockout_by_dow']) == 7
+    True
+    >>> len(result['stockout_by_hour']) == 24
+    True
+    >>> result['dispatch_count'] >= 0
+    True
+    """
     if rng is None:
         rng = np.random.default_rng()
 
@@ -114,6 +158,35 @@ def run_many(
     base_seed: int = 0,
     label: str = "",
 ) -> list[dict]:
+    """Run simulate_one_year num_runs times and return all results.
+
+    Parameters
+    ----------
+    config : dict
+        Simulation configuration.
+    policy : str
+        'fixed' or 'demand'.
+    num_runs : int, optional
+        Overrides config['num_runs'] if given.
+    base_seed : int
+        Run i uses seed base_seed + i for full reproducibility.
+    label : str
+        Progress label printed to terminal.
+
+    Returns
+    -------
+    list[dict]
+        One result dict per run.
+
+    Examples
+    --------
+    >>> from src.config import CONFIG
+    >>> results = run_many(CONFIG, policy='fixed', num_runs=3, label='test')
+    >>> len(results) == 3
+    True
+    >>> all('stockout_rate' in r for r in results)
+    True
+    """
     n = num_runs if num_runs is not None else config["num_runs"]
     results = []
     print_every = max(1, n // 5)
