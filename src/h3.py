@@ -1,3 +1,6 @@
+import numpy as np
+from src.config import CONFIG, get_param
+from src.simulation import run_many
 """
 h3.py
 Phase 3 — Hypothesis 3.
@@ -44,7 +47,6 @@ def run_h3(config: dict = CONFIG) -> dict:
 
     Examples
     --------
-    >>> from src.config import CONFIG
     >>> result = run_h3(CONFIG)
     >>> 0.0 <= result['peak_stockout_fraction'] <= 1.0
     True
@@ -64,7 +66,6 @@ def run_h3(config: dict = CONFIG) -> dict:
     print(f"33.3% of stockouts despite being 33.3% of the day.")
 
     # Figure out which 8 hours are the busiest based on fitted demand
-    from src.config import get_param
     weekday_lambda = np.array(
         get_param(config, "poisson_lambda_weekday"), dtype=float
     )
