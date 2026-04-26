@@ -1,8 +1,62 @@
+"""
+h3.py
+Phase 3 — Hypothesis 3.
+
+ATM transactions in the Danish dataset cluster heavily in certain hours,
+so we'd expect stockouts to follow the same pattern rather than spread
+evenly across the day. This file tests whether peak hours — the top 8
+by average demand — account for more than their fair share (33.3%) of
+stockout events.
+
+Authors: Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
+AI Disclosure: Claude (Anthropic) assisted in drafting this code.
+"""
+
 TOTAL_HOURS = 24
 UNIFORM_SHARE = 8 / 24  # 33.3% — expected if 8 peak hours were uniform
 
 
 def run_h3(config: dict = CONFIG) -> dict:
+    """Test whether stockouts cluster in high-demand hours.
+
+    Picks the 8 busiest hours from the fitted Poisson lambdas, runs
+    num_runs simulations under the fixed policy, and checks whether
+    those hours attract more than their uniform share (8/24 = 33.3%)
+    of stockout events.
+
+    Parameters
+    ----------
+    config : dict
+        Simulation config from config.py.
+
+    Returns
+    -------
+    dict with keys:
+        peak_hours               : list[int]
+        peak_stockout_fraction   : float
+        expected_peak_fraction   : float  (always 8/24)
+        disproportionality_ratio : float
+        stockouts_by_hour        : list[int]
+        stockouts_by_hour_pct    : list[float]
+        total_stockouts          : int
+        supported                : bool
+        finding                  : str
+
+    Examples
+    --------
+    >>> from src.config import CONFIG
+    >>> result = run_h3(CONFIG)
+    >>> 0.0 <= result['peak_stockout_fraction'] <= 1.0
+    True
+    >>> result['expected_peak_fraction'] == 8 / 24
+    True
+    >>> isinstance(result['supported'], bool)
+    True
+    >>> len(result['stockouts_by_hour']) == 24
+    True
+    >>> len(result['peak_hours']) == 8
+    True
+    """
     print("\n" + "=" * 55)
     print("PHASE 3 — H3: Peak hour stockout disproportionality")
     print("=" * 55)
