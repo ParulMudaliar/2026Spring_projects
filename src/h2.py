@@ -47,3 +47,46 @@ def run_h2(config: dict = CONFIG) -> dict:
     print("=" * 55)
     print("Prediction: demand-triggered policy reduces stockout rate")
     print("but increases dispatch frequency.")
+
+def _summarize(results: list[dict]) -> dict:
+    """Compute summary statistics from a list of simulation results.
+
+    Parameters
+    ----------
+    results : list[dict]
+        Output from run_many().
+
+    Returns
+    -------
+    dict with keys:
+        mean_stockout_rate  : float
+        std_stockout_rate   : float
+        p5_stockout_rate    : float
+        p95_stockout_rate   : float
+        mean_dispatch_count : float
+        std_dispatch_count  : float
+        all_rates           : list[float]
+
+    Examples
+    --------
+    >>> results = [{'stockout_rate': 0.1, 'dispatch_count': 100,
+    ...             'stockout_by_dow': [0]*7,
+    ...             'stockout_by_hour': [0]*24,
+    ...             'stockout_days': 10,
+    ...             'cash_history': []}]
+    >>> s = _summarize(results)
+    >>> s['mean_stockout_rate'] == 0.1
+    True
+    """
+    rates = [r["stockout_rate"] for r in results]
+    dispatches = [r["dispatch_count"] for r in results]
+
+    return {
+        "mean_stockout_rate": round(float(np.mean(rates)), 6),
+        "std_stockout_rate": round(float(np.std(rates)), 6),
+        "p5_stockout_rate": round(float(np.percentile(rates, 5)), 6),
+        "p95_stockout_rate": round(float(np.percentile(rates, 95)), 6),
+        "mean_dispatch_count": round(float(np.mean(dispatches)), 2),
+        "std_dispatch_count": round(float(np.std(dispatches)), 2),
+        "all_rates": rates,
+    }
