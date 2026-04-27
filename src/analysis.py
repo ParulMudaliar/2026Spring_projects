@@ -150,3 +150,155 @@ def plot_h2(h2: dict) -> None:
     fig.savefig(OUTPUTS / "h2_policy_comparison.png", dpi=150)
     plt.close(fig)
     print(f"  Saved: outputs/h2_policy_comparison.png")
+
+
+def plot_h3(h3: dict) -> None:
+    """Plot stockout distribution by hour of day for H3.
+
+    Parameters
+    ----------
+    h3 : dict
+        Output from h3.run_h3().
+
+    Examples
+    --------
+    >>> plot_h3({'stockouts_by_hour_pct': [4.0]*24,
+    ...          'peak_hours': [10,11,12,13,14,15,16,17],
+    ...          'peak_stockout_fraction': 0.4,
+    ...          'expected_peak_fraction': 0.333,
+    ...          'disproportionality_ratio': 1.2})
+    """
+    pcts = h3["stockouts_by_hour_pct"]
+    peak_hours = h3["peak_hours"]
+    colors = [
+        "#534AB7" if h in peak_hours else "#B5D4F4"
+        for h in range(24)
+    ]
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.bar(range(24), pcts, color=colors,
+           edgecolor="white", linewidth=0.3)
+    ax.axhline(100 / 24, color="#E8593C", linestyle="--",
+               linewidth=1.5,
+               label=f"Uniform baseline ({100/24:.1f}%)")
+
+    ax.set_xlabel("Hour of day")
+    ax.set_ylabel("% of total stockouts")
+    ax.set_xticks(range(24))
+    ax.set_xticklabels([f"{h:02d}" for h in range(24)], fontsize=8)
+    ax.set_title(
+        f"H3 — Stockout distribution by hour of day\n"
+        f"Peak hour share: {h3['peak_stockout_fraction']:.1%} "
+        f"(expected {h3['expected_peak_fraction']:.1%}, "
+        f"ratio: {h3['disproportionality_ratio']:.2f}x)"
+    )
+    ax.legend(fontsize=9)
+    plt.tight_layout()
+    fig.savefig(OUTPUTS / "h3_hour_stockouts.png", dpi=150)
+    plt.close(fig)
+    print(f"  Saved: outputs/h3_hour_stockouts.png")
+
+
+def save_results(phase2: dict, h1: dict,
+                 h2: dict, h3: dict) -> None:
+    """Save all results to a JSON file in outputs/.
+
+    Parameters
+    ----------
+    phase2 : dict
+        Phase 2 control run results.
+    h1 : dict
+        H1 results.
+    h2 : dict
+        H2 results.
+    h3 : dict
+        H3 results.
+
+    Examples
+    --------
+    >>> save_results({'mean_stockout_rate': 0.1, 'all_rates': []},
+    ...              {'finding': 'H1 SUPPORTED', 'weekend_stockout_fraction': 0.4,
+    ...               'weekday_stockout_fraction': 0.6,
+    ...               'expected_weekend_fraction': 0.286,
+    ...               'disproportionality_ratio': 1.4,
+    ...               'stockouts_by_dow': [0]*7,
+    ...               'stockouts_by_dow_pct': [0.0]*7,
+    ...               'total_stockouts': 0, 'supported': True},
+    ...              {'finding': 'H2 SUPPORTED', 'stockout_reduction': 30.0,
+    ...               'dispatch_change': 12.0, 'supported': True,
+    ...               'fixed': {'mean_stockout_rate': 0.1,
+    ...                         'std_stockout_rate': 0.02,
+    ...                         'p5_stockout_rate': 0.06,
+    ...                         'p95_stockout_rate': 0.15,
+    ...                         'mean_dispatch_count': 120.0,
+    ...                         'std_dispatch_count': 3.0,
+    ...                         'all_rates': []},
+    ...               'demand': {'mean_stockout_rate': 0.07,
+    ...                          'std_stockout_rate': 0.02,
+    ...                          'p5_stockout_rate': 0.04,
+    ...                          'p95_stockout_rate': 0.11,
+    ...                          'mean_dispatch_count': 135.0,
+    ...                          'std_dispatch_count': 5.0,
+    ...                          'all_rates': []}},
+    ...              {'finding': 'H3 SUPPORTED', 'peak_hours': [10,11],
+    ...               'peak_stockout_fraction': 0.5,
+    ...               'expected_peak_fraction': 0.333,
+    ...               'disproportionality_ratio': 1.5,
+    ...               'stockouts_by_hour': [0]*24,
+    ...               'stockouts_by_hour_pct': [0.0]*24,
+    ...               'total_stockouts': 0, 'supported': True})
+    """
+    # Remove raw rate lists before saving — too large for JSON
+    p2 = {k: v for k, v in phase2.items() if k != "all_rates"}
+    h2_clean = {k: v for k, v in h2.items()
+                if k not in ("fixed", "demand")}
+    h2_clean["fixed"] = {k: v for k, v in h2["fixed"].items()
+                         if k != "all_rates"}
+    h2_clean["demand"] = {k: v for k, v in h2["demand"].items()
+                          if k != "all_rates"}
+
+    all_results = {
+        "phase2_control": p2,
+        "h1_weekend_stockouts": h1,
+        "h2_policy_comparison": h2_clean,
+        "h3_peak_hour_stockouts": h3,
+    }
+
+    out = OUTPUTS / "results.json"
+    with open(out, "w") as f:
+        json.dump(all_results, f, indent=2)
+    print(f"  Saved: outputs/results.json")
+
+
+def print_summary(phase2: dict, h1: dict,
+                  h2: dict, h3: dict) -> None:
+    """Print final summary of all findings to terminal.
+
+    Parameters
+    ----------
+    phase2 : dict
+        Phase 2 control run results.
+    h1 : dict
+        H1 results.
+    h2 : dict
+        H2 results.
+    h3 : dict
+        H3 results.
+
+    Examples
+    --------
+    >>> print_summary(
+    ...     {'verdict': 'PASS', 'mean_stockout_rate': 0.1},
+    ...     {'finding': 'H1 SUPPORTED'},
+    ...     {'finding': 'H2 SUPPORTED'},
+    ...     {'finding': 'H3 SUPPORTED'})
+    """
+    print("\n" + "=" * 55)
+    print("FINAL SUMMARY")
+    print("=" * 55)
+    print(f"\nPhase 2: {phase2['verdict']}")
+    print(f"\nH1: {h1['finding']}")
+    print(f"\nH2: {h2['finding']}")
+    print(f"\nH3: {h3['finding']}")
+    print("\nPlots saved to outputs/")
+    print("Results saved to outputs/results.json")
