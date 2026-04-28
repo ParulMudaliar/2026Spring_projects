@@ -44,3 +44,20 @@ def test_stockouts_by_hour_length(cfg):
     """stockouts_by_hour must have 24 entries."""
     result = run_h3(cfg)
     assert len(result["stockouts_by_hour"]) == 24
+
+def test_expected_peak_fraction(cfg):
+    """Expected peak fraction must always be 8/24."""
+    result = run_h3(cfg)
+    assert result["expected_peak_fraction"] == 8 / 24
+
+
+def test_peak_stockout_fraction_valid(cfg):
+    """Peak stockout fraction must be between 0 and 1."""
+    result = run_h3(cfg)
+    assert 0.0 <= result["peak_stockout_fraction"] <= 1.0
+
+
+def test_supported_is_bool(cfg):
+    """supported field must be a boolean."""
+    result = run_h3(cfg)
+    assert isinstance(result["supported"], bool)
