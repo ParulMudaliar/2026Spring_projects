@@ -17,3 +17,30 @@ def cfg():
         "benchmark_min": 0.0,
         "benchmark_max": 1.0,
     }
+def test_returns_required_keys(cfg):
+    """H3 result must contain all required keys."""
+    result = run_h3(cfg)
+    for key in [
+        "peak_hours",
+        "peak_stockout_fraction",
+        "expected_peak_fraction",
+        "disproportionality_ratio",
+        "stockouts_by_hour",
+        "stockouts_by_hour_pct",
+        "total_stockouts",
+        "supported",
+        "finding",
+    ]:
+        assert key in result
+
+
+def test_peak_hours_length(cfg):
+    """peak_hours must always contain exactly 8 hours."""
+    result = run_h3(cfg)
+    assert len(result["peak_hours"]) == 8
+
+
+def test_stockouts_by_hour_length(cfg):
+    """stockouts_by_hour must have 24 entries."""
+    result = run_h3(cfg)
+    assert len(result["stockouts_by_hour"]) == 24
