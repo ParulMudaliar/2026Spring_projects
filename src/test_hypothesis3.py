@@ -61,3 +61,11 @@ def test_supported_is_bool(cfg):
     """supported field must be a boolean."""
     result = run_h3(cfg)
     assert isinstance(result["supported"], bool)
+
+def test_zero_stockout_result():
+    """Zero stockout result must be safe and unsupported."""
+    result = _zero_stockout_result([10, 11, 12, 13, 14, 15, 16, 17])
+    assert result["total_stockouts"] == 0
+    assert result["supported"] is False
+    assert len(result["stockouts_by_hour"]) == 24
+    assert len(result["peak_hours"]) == 8
