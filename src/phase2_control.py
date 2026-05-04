@@ -6,7 +6,6 @@ Run the simulation under the fixed 3-day schedule to confirm the model
 produces a plausible stockout rate before we start experimenting.
 
 Authors: Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
-AI Disclosure: Claude  assisted in drafting this code.
 """
 import numpy as np
 from src.config import CONFIG

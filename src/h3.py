@@ -12,7 +12,6 @@ by average demand — account for more than their fair share (33.3%) of
 stockout events.
 
 Authors: Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
-AI Disclosure: Claude (Anthropic) assisted in drafting this code.
 """
 
 TOTAL_HOURS = 24
