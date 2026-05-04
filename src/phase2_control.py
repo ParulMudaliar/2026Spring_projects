@@ -8,6 +8,9 @@ produces a plausible stockout rate before we start experimenting.
 Authors: Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
 AI Disclosure: Claude  assisted in drafting this code.
 """
+import numpy as np
+from src.config import CONFIG
+from src.simulation import run_many
 
 def run_control(config: dict = CONFIG) -> dict:
     def run_control(config: dict = CONFIG) -> dict:
