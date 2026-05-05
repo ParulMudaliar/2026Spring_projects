@@ -1,5 +1,6 @@
 # ATM Cash Replenishment — Monte Carlo Simulation
 **Authors:** Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
+<img width="766" height="613" alt="image" src="https://github.com/user-attachments/assets/13737cf7-f1c3-4bf2-9492-69312f7eb807" />
 
 ## Overview
 This project simulates a single ATM's cash lifecycle over one year to study how replenishment policies and demand patterns affect stockout risk. Using 10,000 Monte Carlo runs per experiment, we test three hypotheses grounded in a real-world Danish ATM transaction dataset and Federal Reserve payment statistics.
