@@ -12,37 +12,31 @@ Course: IS 597PR, UIUC Spring 2026
 """
 
 import numpy as np
+from typing import Any
 from src.config import CONFIG
 from src.simulation import run_many
 
 
-def run_h2(config: dict = CONFIG) -> dict:
+def run_h2(config: dict[str, Any] = CONFIG) -> dict[str, Any]:
     """Run H2 experiment: fixed schedule vs demand-triggered policy.
-
-    Runs num_runs simulations under each policy and compares:
-      - Mean annual stockout rate
-      - Mean annual dispatch count
-      - Variability (std) of both metrics
 
     Parameters
     ----------
-    config : dict
+    config : dict[str, Any]
         Simulation configuration from config.py.
 
     Returns
     -------
-    dict with keys:
-        fixed               : dict of stats for fixed policy
-        demand              : dict of stats for demand policy
-        stockout_reduction  : float  (percentage reduction)
-        dispatch_change     : float  (percentage change)
-        supported           : bool
-        finding             : str
+    dict[str, Any]
+        Keys: fixed, demand, stockout_reduction, dispatch_change,
+        supported, finding.
 
     Examples
     --------
     >>> from src.config import CONFIG
-    >>> result = run_h2(CONFIG)
+    >>> cfg = {**CONFIG, 'sim_days': 30, 'num_runs': 5,
+    ...        'benchmark_min': 0.0, 'benchmark_max': 1.0}
+    >>> result = run_h2(cfg)
     >>> 'fixed' in result and 'demand' in result
     True
     >>> 0.0 <= result['fixed']['mean_stockout_rate'] <= 1.0
@@ -57,47 +51,38 @@ def run_h2(config: dict = CONFIG) -> dict:
     print("\n" + "=" * 55)
     print("PHASE 3 — H2: Fixed schedule vs demand-triggered policy")
     print("=" * 55)
-    print("Prediction: demand-triggered policy reduces stockout rate")
-    print("but increases dispatch frequency.")
 
     print("\n  Running fixed schedule...")
-    fixed_results = run_many(
-        config,
-        policy="fixed",
-        label="H2-fixed",
-        base_seed=20_000,
+    fixed_results: list[dict[str, Any]] = run_many(
+        config, policy="fixed", label="H2-fixed", base_seed=20_000,
     )
-
     print("\n  Running demand-triggered policy...")
-    demand_results = run_many(
-        config,
-        policy="demand",
-        label="H2-demand",
-        base_seed=30_000,
+    demand_results: list[dict[str, Any]] = run_many(
+        config, policy="demand", label="H2-demand", base_seed=30_000,
     )
 
-    fixed_stats = _summarize(fixed_results)
-    demand_stats = _summarize(demand_results)
+    fixed_stats: dict[str, Any] = _summarize(fixed_results)
+    demand_stats: dict[str, Any] = _summarize(demand_results)
 
-    fixed_rate = fixed_stats["mean_stockout_rate"]
-    demand_rate = demand_stats["mean_stockout_rate"]
+    fixed_rate: float = fixed_stats["mean_stockout_rate"]
+    demand_rate: float = demand_stats["mean_stockout_rate"]
 
-    stockout_reduction = (
+    stockout_reduction: float = (
         (fixed_rate - demand_rate) / fixed_rate * 100
         if fixed_rate > 0 else 0.0
     )
 
-    fixed_dispatch = fixed_stats["mean_dispatch_count"]
-    demand_dispatch = demand_stats["mean_dispatch_count"]
+    fixed_dispatch: float = fixed_stats["mean_dispatch_count"]
+    demand_dispatch: float = demand_stats["mean_dispatch_count"]
 
-    dispatch_change = (
+    dispatch_change: float = (
         (demand_dispatch - fixed_dispatch) / fixed_dispatch * 100
         if fixed_dispatch > 0 else 0.0
     )
 
-    supported = stockout_reduction > 5.0
+    supported: bool = stockout_reduction > 5.0
 
-    finding = (
+    finding: str = (
         f"Demand-triggered policy changed stockout rate by "
         f"{stockout_reduction:.1f}% "
         f"({fixed_rate:.2%} -> {demand_rate:.2%}) "
@@ -119,38 +104,41 @@ def run_h2(config: dict = CONFIG) -> dict:
     }
 
 
-def _summarize(results: list[dict]) -> dict:
+def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     """Compute summary statistics from a list of simulation results.
 
     Parameters
     ----------
-    results : list[dict]
+    results : list[dict[str, Any]]
         Output from run_many().
 
     Returns
     -------
-    dict with keys:
-        mean_stockout_rate  : float
-        std_stockout_rate   : float
-        p5_stockout_rate    : float
-        p95_stockout_rate   : float
-        mean_dispatch_count : float
-        std_dispatch_count  : float
-        all_rates           : list[float]
+    dict[str, Any]
+        Keys: mean_stockout_rate, std_stockout_rate, p5_stockout_rate,
+        p95_stockout_rate, mean_dispatch_count, std_dispatch_count,
+        all_rates.
 
     Examples
     --------
-    >>> results = [{'stockout_rate': 0.1, 'dispatch_count': 100,
-    ...             'stockout_by_dow': [0]*7,
-    ...             'stockout_by_hour': [0]*24,
-    ...             'stockout_days': 10,
-    ...             'cash_history': []}]
+    >>> results = [
+    ...     {'stockout_rate': 0.1, 'dispatch_count': 100,
+    ...      'stockout_by_dow': [0]*7, 'stockout_by_hour': [0]*24,
+    ...      'stockout_days': 10, 'cash_history': []},
+    ...     {'stockout_rate': 0.2, 'dispatch_count': 110,
+    ...      'stockout_by_dow': [0]*7, 'stockout_by_hour': [0]*24,
+    ...      'stockout_days': 20, 'cash_history': []},
+    ... ]
     >>> s = _summarize(results)
-    >>> s['mean_stockout_rate'] == 0.1
+    >>> abs(s['mean_stockout_rate'] - 0.15) < 0.001
+    True
+    >>> abs(s['mean_dispatch_count'] - 105.0) < 0.001
+    True
+    >>> len(s['all_rates']) == 2
     True
     """
-    rates = [r["stockout_rate"] for r in results]
-    dispatches = [r["dispatch_count"] for r in results]
+    rates: list[float] = [r["stockout_rate"] for r in results]
+    dispatches: list[int] = [r["dispatch_count"] for r in results]
 
     return {
         "mean_stockout_rate": round(float(np.mean(rates)), 6),
@@ -164,8 +152,8 @@ def _summarize(results: list[dict]) -> dict:
 
 
 def _print_results(
-    fixed: dict,
-    demand: dict,
+    fixed: dict[str, Any],
+    demand: dict[str, Any],
     stockout_reduction: float,
     dispatch_change: float,
     finding: str,
@@ -174,9 +162,9 @@ def _print_results(
 
     Parameters
     ----------
-    fixed : dict
+    fixed : dict[str, Any]
         Summary stats for fixed policy.
-    demand : dict
+    demand : dict[str, Any]
         Summary stats for demand policy.
     stockout_reduction : float
         Percentage reduction in stockout rate.
@@ -196,6 +184,8 @@ def _print_results(
     ...           'mean_dispatch_count': 135.0, 'std_dispatch_count': 5.0,
     ...           'all_rates': []}
     >>> _print_results(fixed, demand, 30.0, 12.5, 'H2 SUPPORTED.')
+    <BLANKLINE>
+      ...
     """
     print(f"\n  {'Policy':<20} {'Mean stockout':>14} "
           f"{'Dispatches/yr':>14}")
