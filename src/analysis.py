@@ -9,30 +9,33 @@ Course: IS 597PR, UIUC Spring 2026
 
 import json
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend for CI/testing
 import matplotlib.pyplot as plt
 from pathlib import Path
+from typing import Any
 
-OUTPUTS = Path("outputs")
+OUTPUTS: Path = Path("outputs")
 OUTPUTS.mkdir(exist_ok=True)
 
-DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+DAYS: list[str] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
-def plot_control_run(phase2: dict) -> None:
+def plot_control_run(phase2: dict[str, Any]) -> None:
     """Plot histogram of stockout rates from Phase 2 control run.
 
     Parameters
     ----------
-    phase2 : dict
+    phase2 : dict[str, Any]
         Output from phase2_control.run_control().
 
     Examples
     --------
-    >>> plot_control_run({'all_rates': [0.1, 0.12, 0.09],
-    ...                   'mean_stockout_rate': 0.103})
+    >>> plot_control_run({'all_rates': [0.1, 0.12, 0.09, 0.11, 0.10],
+    ...                   'mean_stockout_rate': 0.104})
     """
-    rates = phase2["all_rates"]
-    mean = phase2["mean_stockout_rate"]
+    rates: list[float] = phase2["all_rates"]
+    mean: float = phase2["mean_stockout_rate"]
 
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.hist(rates, bins=50, color="#534AB7", alpha=0.75,
@@ -56,12 +59,13 @@ def plot_control_run(phase2: dict) -> None:
     plt.close(fig)
     print(f"  Saved: outputs/phase2_control.png")
 
-def plot_h1(h1: dict) -> None:
+
+def plot_h1(h1: dict[str, Any]) -> None:
     """Plot stockout distribution by day of week for H1.
 
     Parameters
     ----------
-    h1 : dict
+    h1 : dict[str, Any]
         Output from h1.run_h1().
 
     Examples
@@ -71,8 +75,8 @@ def plot_h1(h1: dict) -> None:
     ...          'expected_weekend_fraction': 0.286,
     ...          'disproportionality_ratio': 1.0})
     """
-    pcts = h1["stockouts_by_dow_pct"]
-    colors = ["#B5D4F4"] * 5 + ["#534AB7", "#534AB7"]
+    pcts: list[float] = h1["stockouts_by_dow_pct"]
+    colors: list[str] = ["#B5D4F4"] * 5 + ["#534AB7", "#534AB7"]
 
     fig, ax = plt.subplots(figsize=(8, 4))
     bars = ax.bar(DAYS, pcts, color=colors,
@@ -80,15 +84,10 @@ def plot_h1(h1: dict) -> None:
     ax.axhline(100 / 7, color="#E8593C", linestyle="--",
                linewidth=1.5,
                label=f"Uniform baseline ({100/7:.1f}%)")
-
     for bar, pct in zip(bars, pcts):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.3,
-            f"{pct:.1f}%",
-            ha="center", va="bottom", fontsize=8
-        )
-
+        ax.text(bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.3, f"{pct:.1f}%",
+                ha="center", va="bottom", fontsize=8)
     ax.set_ylabel("% of total stockouts")
     ax.set_title(
         f"H1 — Stockout distribution by day of week\n"
@@ -103,12 +102,12 @@ def plot_h1(h1: dict) -> None:
     print(f"  Saved: outputs/h1_dow_stockouts.png")
 
 
-def plot_h2(h2: dict) -> None:
+def plot_h2(h2: dict[str, Any]) -> None:
     """Plot side-by-side stockout rate distributions for H2.
 
     Parameters
     ----------
-    h2 : dict
+    h2 : dict[str, Any]
         Output from h2.run_h2().
 
     Examples
@@ -121,13 +120,12 @@ def plot_h2(h2: dict) -> None:
     ...          'dispatch_change': 12.5})
     """
     fig, axes = plt.subplots(1, 2, figsize=(12, 4), sharey=True)
-
     for ax, key, label, color in [
         (axes[0], "fixed",  "Fixed 3-day schedule",   "#B5D4F4"),
         (axes[1], "demand", "Demand-triggered policy", "#534AB7"),
     ]:
-        rates = h2[key]["all_rates"]
-        mean = h2[key]["mean_stockout_rate"]
+        rates: list[float] = h2[key]["all_rates"]
+        mean: float = h2[key]["mean_stockout_rate"]
         ax.hist(rates, bins=50, color=color, alpha=0.85,
                 edgecolor="white", linewidth=0.3)
         ax.axvline(mean, color="#E8593C", linewidth=2,
@@ -136,28 +134,24 @@ def plot_h2(h2: dict) -> None:
         ax.set_title(label)
         ax.legend(fontsize=9)
         ax.xaxis.set_major_formatter(
-            plt.FuncFormatter(lambda x, _: f"{x:.0%}")
-        )
-
+            plt.FuncFormatter(lambda x, _: f"{x:.0%}"))
     axes[0].set_ylabel("Number of runs")
     fig.suptitle(
         f"H2 — Policy comparison\n"
         f"Stockout change: {h2['stockout_reduction']:+.1f}%  |  "
-        f"Dispatch change: {h2['dispatch_change']:+.1f}%",
-        fontsize=11
-    )
+        f"Dispatch change: {h2['dispatch_change']:+.1f}%", fontsize=11)
     plt.tight_layout()
     fig.savefig(OUTPUTS / "h2_policy_comparison.png", dpi=150)
     plt.close(fig)
     print(f"  Saved: outputs/h2_policy_comparison.png")
 
 
-def plot_h3(h3: dict) -> None:
+def plot_h3(h3: dict[str, Any]) -> None:
     """Plot stockout distribution by hour of day for H3.
 
     Parameters
     ----------
-    h3 : dict
+    h3 : dict[str, Any]
         Output from h3.run_h3().
 
     Examples
@@ -168,20 +162,18 @@ def plot_h3(h3: dict) -> None:
     ...          'expected_peak_fraction': 0.333,
     ...          'disproportionality_ratio': 1.2})
     """
-    pcts = h3["stockouts_by_hour_pct"]
-    peak_hours = h3["peak_hours"]
-    colors = [
+    pcts: list[float] = h3["stockouts_by_hour_pct"]
+    peak_hours: list[int] = h3["peak_hours"]
+    colors: list[str] = [
         "#534AB7" if h in peak_hours else "#B5D4F4"
         for h in range(24)
     ]
-
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.bar(range(24), pcts, color=colors,
            edgecolor="white", linewidth=0.3)
     ax.axhline(100 / 24, color="#E8593C", linestyle="--",
                linewidth=1.5,
                label=f"Uniform baseline ({100/24:.1f}%)")
-
     ax.set_xlabel("Hour of day")
     ax.set_ylabel("% of total stockouts")
     ax.set_xticks(range(24))
@@ -190,8 +182,7 @@ def plot_h3(h3: dict) -> None:
         f"H3 — Stockout distribution by hour of day\n"
         f"Peak hour share: {h3['peak_stockout_fraction']:.1%} "
         f"(expected {h3['expected_peak_fraction']:.1%}, "
-        f"ratio: {h3['disproportionality_ratio']:.2f}x)"
-    )
+        f"ratio: {h3['disproportionality_ratio']:.2f}x)")
     ax.legend(fontsize=9)
     plt.tight_layout()
     fig.savefig(OUTPUTS / "h3_hour_stockouts.png", dpi=150)
@@ -199,90 +190,91 @@ def plot_h3(h3: dict) -> None:
     print(f"  Saved: outputs/h3_hour_stockouts.png")
 
 
-def save_results(phase2: dict, h1: dict,
-                 h2: dict, h3: dict) -> None:
+def save_results(
+    phase2: dict[str, Any],
+    h1: dict[str, Any],
+    h2: dict[str, Any],
+    h3: dict[str, Any],
+) -> None:
     """Save all results to a JSON file in outputs/.
 
     Parameters
     ----------
-    phase2 : dict
+    phase2 : dict[str, Any]
         Phase 2 control run results.
-    h1 : dict
+    h1 : dict[str, Any]
         H1 results.
-    h2 : dict
+    h2 : dict[str, Any]
         H2 results.
-    h3 : dict
+    h3 : dict[str, Any]
         H3 results.
 
     Examples
     --------
     >>> save_results({'mean_stockout_rate': 0.1, 'all_rates': []},
-    ...              {'finding': 'H1 SUPPORTED', 'weekend_stockout_fraction': 0.4,
-    ...               'weekday_stockout_fraction': 0.6,
-    ...               'expected_weekend_fraction': 0.286,
-    ...               'disproportionality_ratio': 1.4,
-    ...               'stockouts_by_dow': [0]*7,
-    ...               'stockouts_by_dow_pct': [0.0]*7,
-    ...               'total_stockouts': 0, 'supported': True},
-    ...              {'finding': 'H2 SUPPORTED', 'stockout_reduction': 30.0,
-    ...               'dispatch_change': 12.0, 'supported': True,
-    ...               'fixed': {'mean_stockout_rate': 0.1,
-    ...                         'std_stockout_rate': 0.02,
-    ...                         'p5_stockout_rate': 0.06,
-    ...                         'p95_stockout_rate': 0.15,
-    ...                         'mean_dispatch_count': 120.0,
-    ...                         'std_dispatch_count': 3.0,
-    ...                         'all_rates': []},
-    ...               'demand': {'mean_stockout_rate': 0.07,
-    ...                          'std_stockout_rate': 0.02,
-    ...                          'p5_stockout_rate': 0.04,
-    ...                          'p95_stockout_rate': 0.11,
-    ...                          'mean_dispatch_count': 135.0,
-    ...                          'std_dispatch_count': 5.0,
-    ...                          'all_rates': []}},
-    ...              {'finding': 'H3 SUPPORTED', 'peak_hours': [10,11],
-    ...               'peak_stockout_fraction': 0.5,
-    ...               'expected_peak_fraction': 0.333,
-    ...               'disproportionality_ratio': 1.5,
-    ...               'stockouts_by_hour': [0]*24,
-    ...               'stockouts_by_hour_pct': [0.0]*24,
-    ...               'total_stockouts': 0, 'supported': True})
+    ...     {'finding': 'H1', 'supported': True,
+    ...      'weekend_stockout_fraction': 0.4,
+    ...      'weekday_stockout_fraction': 0.6,
+    ...      'expected_weekend_fraction': 0.286,
+    ...      'disproportionality_ratio': 1.4,
+    ...      'stockouts_by_dow': [0]*7,
+    ...      'stockouts_by_dow_pct': [0.0]*7,
+    ...      'total_stockouts': 0},
+    ...     {'finding': 'H2', 'supported': True,
+    ...      'stockout_reduction': 30.0, 'dispatch_change': 12.0,
+    ...      'fixed': {'mean_stockout_rate': 0.1, 'std_stockout_rate': 0.02,
+    ...                'p5_stockout_rate': 0.06, 'p95_stockout_rate': 0.15,
+    ...                'mean_dispatch_count': 120.0, 'std_dispatch_count': 3.0,
+    ...                'all_rates': []},
+    ...      'demand': {'mean_stockout_rate': 0.07, 'std_stockout_rate': 0.02,
+    ...                 'p5_stockout_rate': 0.04, 'p95_stockout_rate': 0.11,
+    ...                 'mean_dispatch_count': 135.0, 'std_dispatch_count': 5.0,
+    ...                 'all_rates': []}},
+    ...     {'finding': 'H3', 'supported': True,
+    ...      'peak_hours': [10,11], 'peak_stockout_fraction': 0.5,
+    ...      'expected_peak_fraction': 0.333, 'disproportionality_ratio': 1.5,
+    ...      'stockouts_by_hour': [0]*24, 'stockouts_by_hour_pct': [0.0]*24,
+    ...      'total_stockouts': 0})
     """
-    # Remove raw rate lists before saving — too large for JSON
-    p2 = {k: v for k, v in phase2.items() if k != "all_rates"}
-    h2_clean = {k: v for k, v in h2.items()
-                if k not in ("fixed", "demand")}
-    h2_clean["fixed"] = {k: v for k, v in h2["fixed"].items()
-                         if k != "all_rates"}
-    h2_clean["demand"] = {k: v for k, v in h2["demand"].items()
-                          if k != "all_rates"}
-
-    all_results = {
+    p2: dict[str, Any] = {k: v for k, v in phase2.items() if k != "all_rates"}
+    h2_clean: dict[str, Any] = {
+        k: v for k, v in h2.items() if k not in ("fixed", "demand")
+    }
+    h2_clean["fixed"] = {
+        k: v for k, v in h2["fixed"].items() if k != "all_rates"
+    }
+    h2_clean["demand"] = {
+        k: v for k, v in h2["demand"].items() if k != "all_rates"
+    }
+    all_results: dict[str, Any] = {
         "phase2_control": p2,
         "h1_weekend_stockouts": h1,
         "h2_policy_comparison": h2_clean,
         "h3_peak_hour_stockouts": h3,
     }
-
-    out = OUTPUTS / "results.json"
+    out: Path = OUTPUTS / "results.json"
     with open(out, "w") as f:
         json.dump(all_results, f, indent=2)
     print(f"  Saved: outputs/results.json")
 
 
-def print_summary(phase2: dict, h1: dict,
-                  h2: dict, h3: dict) -> None:
+def print_summary(
+    phase2: dict[str, Any],
+    h1: dict[str, Any],
+    h2: dict[str, Any],
+    h3: dict[str, Any],
+) -> None:
     """Print final summary of all findings to terminal.
 
     Parameters
     ----------
-    phase2 : dict
+    phase2 : dict[str, Any]
         Phase 2 control run results.
-    h1 : dict
+    h1 : dict[str, Any]
         H1 results.
-    h2 : dict
+    h2 : dict[str, Any]
         H2 results.
-    h3 : dict
+    h3 : dict[str, Any]
         H3 results.
 
     Examples
@@ -292,6 +284,21 @@ def print_summary(phase2: dict, h1: dict,
     ...     {'finding': 'H1 SUPPORTED'},
     ...     {'finding': 'H2 SUPPORTED'},
     ...     {'finding': 'H3 SUPPORTED'})
+    <BLANKLINE>
+    =======================================================
+    FINAL SUMMARY
+    =======================================================
+    <BLANKLINE>
+    Phase 2: PASS
+    <BLANKLINE>
+    H1: H1 SUPPORTED
+    <BLANKLINE>
+    H2: H2 SUPPORTED
+    <BLANKLINE>
+    H3: H3 SUPPORTED
+    <BLANKLINE>
+    Plots saved to outputs/
+    Results saved to outputs/results.json
     """
     print("\n" + "=" * 55)
     print("FINAL SUMMARY")
