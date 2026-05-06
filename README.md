@@ -70,7 +70,7 @@ Copy the printed parameter values into `src/config.py` (already done — fitted 
 ## Running the Simulation
 
 ```bash
-python run_simulation.py
+python main.py
 ```
 
 This runs all four phases in order:
