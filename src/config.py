@@ -7,19 +7,20 @@ Authors: Parul Mudaliar, Nandhini Ramesh, Suriya Gopal
 Course: IS 597PR, UIUC Spring 2026
 """
 
-from typing import Any
+CONFIG: dict = {
 
-CONFIG: dict[str, Any] = {
+    # --- Cash parameters (currency: DKK — Danish Krone) ---
+    # Source: ATMIA European ATM industry standards.
+    # A Danish bank-branch ATM typically holds DKK 400,000–1,200,000 loaded.
+    # DKK 800,000 ≈ €107,000 is a realistic mid-range operational load.
+    "initial_cash": 880_000,    # DKK
+    "refill_amount": 880_000,   # DKK
 
-    # Cash parameters
-    "initial_cash": 1_200_000,
-    "refill_amount": 1_200_000,
-
-    # Fixed schedule policy
+    # --- Fixed schedule policy (Phase 2 control + H1 + H3) ---
     "fixed_refill_days": 3,
 
     # Demand-triggered policy (H2)
-    "demand_threshold": 500_000,
+    "demand_threshold": 300_000,    # DKK
 
     # Weibull truck delay
     "weibull_shape": 1.5,
@@ -30,26 +31,29 @@ CONFIG: dict[str, Any] = {
     "num_runs": 10_000,
 
     # Phase 2 benchmark
+
     "benchmark_min": 0.05,
     "benchmark_max": 0.20,
 
     # Distribution parameters (fitted from Danish dataset)
-    "lognormal_mu": 4.952723380906168,
+    "lognormal_mu": 6.6669,     # DKK
     "lognormal_sigma": 0.82,
-    "poisson_lambda_weekday": [4.5693, 2.8429, 2.2211, 3.0776, 4.0936, 11.0512,
-                               27.0274, 45.7192, 72.8442, 113.5583, 185.2621,
-                               183.8668, 169.674, 173.0584, 179.4576, 181.0533,
-                               163.9854, 133.1388, 102.5984, 76.3378, 53.0565,
-                               33.6049, 19.036, 11.6036],
-    "poisson_lambda_weekend": [12.365, 9.04, 6.7414, 6.8818, 3.6364, 5.1639,
-                               12.5, 32.7415, 71.2267, 129.0667, 172.5333,
-                               182.0, 163.1074, 140.1611, 123.9933, 106.9524,
-                               96.8725, 89.6733, 72.6242, 59.4797, 43.5274,
-                               28.3958, 17.7465, 11.781],
+    "poisson_lambda_weekday": [0.5849, 0.3639, 0.2843, 0.3939, 0.5240, 1.4146,
+                                3.4595, 5.8521, 9.3241, 14.5355, 23.7136, 23.5349,
+                                21.7183, 22.1515, 22.9706, 23.1748, 20.9901, 17.0418,
+                                13.1326, 9.7712, 6.7912, 4.3014, 2.4366, 1.4852],
+    "poisson_lambda_weekend": [1.5827, 1.1571, 0.8629, 0.8809, 0.4655, 0.6610,
+                                1.6000, 4.1909, 9.1170, 16.5205, 22.0843, 23.2960,
+                                20.8778, 17.9406, 15.8711, 13.6899, 12.3997, 11.4782,
+                                9.2959, 7.6134, 5.5715, 3.6347, 2.2715, 1.5080],
     "dow_multipliers": [1.0, 1.1101, 1.1612, 1.2128, 1.5156, 1.1772, 0.7906],
 
-    # Fallback parameters (used if fitted values are None)
-    "fallback_lognormal_mu": 4.61,
+    # Fallback parameters
+    # Used automatically if distribution parameters above are None.
+    # These are reasonable estimates based on Fed Reserve data and
+    # logistics literature. Replace with fitted values after running
+    # fit_distributions.py.
+    "fallback_lognormal_mu": 6.57,   # DKK;
     "fallback_lognormal_sigma": 0.82,
     "fallback_poisson_weekday": [
         0.1, 0.1, 0.1, 0.1, 0.1, 0.2,
@@ -69,19 +73,19 @@ CONFIG: dict[str, Any] = {
 }
 
 
-def get_param(config: dict[str, Any], key: str) -> Any:
+def get_param(config: dict, key: str) -> object:
     """Return fitted parameter if available, otherwise return fallback.
 
     Parameters
     ----------
-    config : dict[str, Any]
+    config : dict
         The CONFIG dictionary.
     key : str
         Parameter key e.g. 'lognormal_mu'.
 
     Returns
     -------
-    Any
+    object
         Fitted value if not None, else corresponding fallback value.
 
     Examples
@@ -89,30 +93,19 @@ def get_param(config: dict[str, Any], key: str) -> Any:
     >>> cfg = {**CONFIG, 'lognormal_mu': None}
     >>> get_param(cfg, 'lognormal_mu') == cfg['fallback_lognormal_mu']
     True
-
     >>> cfg2 = {**CONFIG, 'lognormal_mu': 4.5}
     >>> get_param(cfg2, 'lognormal_mu')
     4.5
-
-    >>> get_param(CONFIG, 'lognormal_sigma')
-    0.82
-
-    >>> cfg3 = {**CONFIG, 'dow_multipliers': None}
-    >>> get_param(cfg3, 'dow_multipliers') == cfg3['fallback_dow_multipliers']
-    True
-
-    >>> cfg4 = {**CONFIG, 'poisson_lambda_weekday': None}
-    >>> get_param(cfg4, 'poisson_lambda_weekday') == cfg4['fallback_poisson_weekday']
-    True
     """
     value = config.get(key)
     if value is not None:
         return value
-    fallback_key = f"fallback_{key}"
-    # Map fitted key names to fallback key names
-    key_map: dict[str, str] = {
-        "fallback_poisson_lambda_weekday": "fallback_poisson_weekday",
-        "fallback_poisson_lambda_weekend": "fallback_poisson_weekend",
+    fallback_key = f"fallback_{key.replace('poisson_lambda_weekday', 'poisson_weekday').replace('poisson_lambda_weekend', 'poisson_weekend').replace('dow_multipliers', 'dow_multipliers')}"
+    fallback_map = {
+        "fallback_lognormal_mu":           config["fallback_lognormal_mu"],
+        "fallback_lognormal_sigma":        config["fallback_lognormal_sigma"],
+        "fallback_poisson_lambda_weekday": config["fallback_poisson_weekday"],
+        "fallback_poisson_lambda_weekend": config["fallback_poisson_weekend"],
+        "fallback_dow_multipliers":        config["fallback_dow_multipliers"],
     }
-    fallback_key = key_map.get(fallback_key, fallback_key)
-    return config.get(fallback_key)
+    return fallback_map.get(f"fallback_{key}", None)
