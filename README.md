@@ -117,7 +117,11 @@ This is a **Type II project** because it builds a Monte Carlo simulation grounde
 ### Setup
 
 ```bash
-pip install numpy scipy pandas matplotlib numba
+python -m venv venv
+source venv/bin/activate        # macOS/Linux
+# venv\Scripts\activate         # Windows
+
+pip install -r requirements.txt
 ```
 
 ### Run the simulation
@@ -140,7 +144,7 @@ Download `danish_atm.csv` from [Kaggle](https://www.kaggle.com/datasets/sparnord
 ### Run tests
 
 ```bash
-python -m pytest
+python -m pytest tests/ -v
 ```
 
 ---
