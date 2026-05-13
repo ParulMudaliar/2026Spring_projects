@@ -5,15 +5,9 @@
 
 ## Overview
 
-This project simulates a single Danish ATM's cash lifecycle over one year to study how replenishment policies and demand patterns affect stockout risk. Using 1,000 Monte Carlo runs per experiment, we test three hypotheses grounded in a real-world Danish ATM transaction dataset and ECB payment statistics.
+This project simulates a single Danish ATM's cash lifecycle over one year to study how replenishment policies and demand patterns affect stockout risk. Using 10,000 Monte Carlo runs per experiment, we test three hypotheses grounded in a real-world Danish ATM transaction dataset and ECB payment statistics.
 
 **Bottom line:** Weekends cause a disproportionate share of stockouts relative to their 28.6% share of days (H1 supported). A demand-triggered refill policy cuts the stockout rate from ~15% to ~3% with only 7 additional truck dispatches per year — a strong operational trade-off (H2 supported). Peak hours (09:00–16:00) account for over 60% of stockouts despite being only 33% of the day (H3 supported).
-
----
-
-## Important Note
-
-Please refer to the project documentation and README for a better understanding of the simulation design, parameter calibration, and hypothesis methodology. We have included detailed explanations to make the project easier to follow and reproduce.
 
 ---
 
@@ -56,7 +50,6 @@ This is a **Type II project** because it builds a Monte Carlo simulation grounde
 |---|---|
 | Danish ATM Transactions (Kaggle / Spare Nord) | https://www.kaggle.com/datasets/sparnord/danish-atm-transactions |
 | ECB Payment Statistics 2022 | https://data.ecb.europa.eu/data/datasets/PTT |
-| Danmarks Nationalbank Payments | https://www.nationalbanken.dk/en/news-and-knowledge/data-and-statistics/payments |
 
 ---
 
@@ -89,8 +82,8 @@ This is a **Type II project** because it builds a Monte Carlo simulation grounde
 ## 6. Methodology Summary
 
 1. **Distribution fitting (Phase 1):** Lognormal withdrawal amounts are anchored to the ECB 2022 EU-27 average (€150 ≈ DKK 1,100). Poisson hourly arrival rates are fitted from the Danish dataset and scaled by 0.1280 to represent a single ATM. Day-of-week multipliers are fitted from the dataset directly.
-2. **Control validation (Phase 2):** A fixed 3-day schedule is run for 1,000 iterations and checked against a real-world benchmark stockout range of 5–20%.
-3. **Hypothesis experiments (Phase 3):** H1, H2, and H3 each run 1,000 simulations with deterministic seeding for reproducibility.
+2. **Control validation (Phase 2):** A fixed 3-day schedule is run for 10,000 iterations and checked against a real-world benchmark stockout range of 5–20%.
+3. **Hypothesis experiments (Phase 3):** H1, H2, and H3 each run 10,000 simulations with deterministic seeding for reproducibility.
 4. **Truck delay:** Each dispatch draws a Weibull(shape=1.5, scale=0.5) delay, minimum 1 day.
 5. **Stockout definition:** A stockout day is any day where cash is exhausted before a transaction can complete. Only the first stockout per day is recorded.
 
@@ -106,7 +99,7 @@ This is a **Type II project** because it builds a Monte Carlo simulation grounde
 
 ## 8. Ethical Considerations
 
-- All data sources are publicly available (Kaggle, ECB, Danmarks Nationalbank).
+- All data sources are publicly available (Kaggle, ECB).
 - No individual transaction records or customer data are used; the dataset contains only anonymized aggregate counts.
 - Parameter choices are documented with sources to allow independent verification.
 
@@ -128,6 +121,12 @@ pip install -r requirements.txt
 
 ```bash
 python main.py
+```
+
+For a quick test with 100 simulations instead of 10,000:
+
+```bash
+python main.py --fast
 ```
 
 This runs all four phases in order:
@@ -189,6 +188,7 @@ python -m pytest tests/ -v
 | H1: Weekend disproportionality | Weekend share vs. uniform | 42.7% vs. 28.6% (1.49×) | > 28.6% | **Supported** |
 | H2: Policy comparison | Stockout rate change | 8.16% → 3.04% (−62.7%) | Rate decreases | **Supported** |
 | H3: Peak-hour clustering | Peak share vs. uniform | 46.1% vs. 33.3% (1.38×) | > 33.3% | **Supported** |
+
 ---
 
 ## 12. Configuration
@@ -224,7 +224,7 @@ Every experiment uses deterministic seeding: run `i` under experiment `X` uses s
 
 ## 14. AI Disclosure
 
-Claude assisted in brainstorming ideas, choosing random variables and slide content. The simulation logic, dataset exploration, and results interpretation are team work.
+Claude (Anthropic) was used to assist in brainstorming ideas, choosing random variables, writing slide content, and with doctests. The simulation logic, dataset exploration, and results interpretation are team work.
 
 ---
 
